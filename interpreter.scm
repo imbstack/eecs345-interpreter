@@ -2,7 +2,8 @@
 ; Tom Dooner (ted27)
 ; Brian Stack (bis12)
 
-(load "loopSimpleParser.scm")
+(load "functionParser.scm")
+
 (define return #f)
 (define the-begin-environment
  '(((true false return) (#t #f None))))
@@ -12,12 +13,39 @@
 ; "return" variable in the environment
 (define interpret
   (lambda (filename)
-    (display (true-or-falsify (get-environment 'return
-      (call/cc (lambda (ret) (set! return ret)
-        (interpret-statement-list (parser filename) the-begin-environment))))
-    ))
+    (display (true-or-falsify
+      (call-function 'main (interpret-global-statement-list (parser filename) the-begin-environment))))
 ))
 ; (define interpret (lambda (file) (display (parser file)))) ; DEBUG ONLY
+
+; do we need to separate this from the other path that our interpreter follows? -tom
+(define interpret-global-statement-list
+  (lambda (parsetree env)
+    (cond
+      ((null? parsetree) env)
+      (else
+        (interpret-global-statement-list (cdr parsetree) (interpret-global-stmt (car parsetree) env))))))
+
+(define interpret-global-stmt
+  (lambda (stmt env)
+    (cond
+      ((eq? (car stmt) 'function) (interpret-declare-function stmt env))
+      ((eq? (car stmt) 'var) (interpret-declare stmt env))
+      (else (interpret-stmt (car stmt) env))
+)))
+
+; stmt is something like '(function other (x) ((return (+ x 1))))
+(define interpret-declare-function
+  (lambda (stmt env)
+    ; the function closure:
+    (add-to-environment (cadr stmt) (cddr stmt) env)))
+
+(define call-function
+  (lambda (function env)
+    (get-environment 'return
+      (call/cc (lambda (ret) (set! return ret)
+        ; TODO!!!!! ----------------v  This will only work for functions with no parameters.
+        (interpret-statement-list (cadr (get-environment function env)) env))))))
 
 (define interpret-statement-list
   (lambda (parsetree env)
