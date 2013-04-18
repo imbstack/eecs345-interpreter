@@ -50,10 +50,12 @@
   (lambda (stmt env class object)
     (let*
       (
+       (class-env (cons (car (get-class-parsetree class env)) env))
        (binding (cadr stmt))
-       (value (interpret-stmt-value (caddr stmt) env class object))
+       (value (if (null? (cddr stmt)) 'None (interpret-stmt-value (caddr stmt) class-env class object)))
        (with-rest-of-class (lambda (v) (cons v (cdr (get-class class env)))))
       )
+      ;(display "setting static var with env: ") (pretty-print (get-class-parsetree class class-env))
       (update-environment class (with-rest-of-class (add-to-environment binding value (get-class-parsetree class env))) env))))
 
 (define get-class
