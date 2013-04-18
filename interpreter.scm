@@ -83,7 +83,6 @@
       ((eq? (car stmt) 'if) (interpret-branch stmt env class object))
       ((eq? (car stmt) 'return) (interpret-ret stmt env class object))
       ((eq? (car stmt) 'funcall) (begin (interpret-function-in-class stmt env class object) env))
-      ;((eq? (car stmt) 'class) (begin (interpret-class (cadr stmt) (caddr stmt) (cddr stmt) env) env))
 )))
 
 ; Performs the actions in a block
